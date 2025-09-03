@@ -9,10 +9,24 @@ This guide covers installing, testing, and debugging the Lian Li Galahad II plug
 - [ ] Node.js installed (for automated testing)
 - [ ] Know your pump model: Trinity (0x7373), Performance (0x7371), or LCD (0x7395)
 
-## Quick Installation (Recommended)
+## 🚀 SUPER EASY - One-Click Installation
 
-### Automated Installation
-Use the provided PowerShell installer for seamless setup:
+### **Fastest Method** - Just Double-Click:
+- **Windows**: `INSTALL.bat` (full menu) or `QUICK_INSTALL.bat` (instant Trinity Enhanced)
+- **Linux/macOS**: `./install.sh` or `./install.sh --quick`
+
+**What it does automatically:**
+- ✅ Runs all 20 protocol tests
+- ✅ Validates plugin syntax
+- ✅ Installs to correct SignalRGB folder
+- ✅ Provides next-step guidance
+
+---
+
+## Advanced Installation Options
+
+### Automated PowerShell Installation
+Use the provided PowerShell installer for manual control:
 
 ```powershell
 # Install Basic Plugin for Trinity

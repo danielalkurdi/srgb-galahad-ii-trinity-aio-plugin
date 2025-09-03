@@ -16,6 +16,9 @@
 ## Project Structure
 
 ```
+├── INSTALL.bat                     # 🚀 One-click installer (Windows)
+├── QUICK_INSTALL.bat              # ⚡ Super-fast Trinity Enhanced install
+├── install.sh                     # 🐧 Linux/macOS installer
 ├── signalrgb-plugin/               # Production-ready SignalRGB plugins
 │   ├── LianLi_GalahadII_Trinity/           # Basic plugin
 │   └── LianLi_GalahadII_Trinity_Enhanced/  # Enhanced plugin
@@ -23,9 +26,9 @@
 │   ├── device.js                   # Basic plugin development version
 │   └── device_enhanced.js          # Enhanced plugin development version
 ├── scripts/
-│   ├── install_signalrgb.ps1      # Automated plugin installer
+│   ├── install_signalrgb.ps1      # PowerShell plugin installer
 │   ├── protocol_test.js           # Protocol validation suite  
-│   ├── run_tests.js               # Test runner
+│   ├── run_tests.js               # Test runner (Node.js)
 │   └── test_plugin.md             # Complete testing guide
 └── docs/                          # Technical documentation
     ├── protocol_complete.md       # Protocol implementation details
@@ -35,7 +38,29 @@
 
 ## Quick Start
 
-### 🚀 One-Click Installation (Recommended)
+### 🚀 **SUPER EASY** - One-Click Install & Test
+
+**Windows (Recommended):**
+```batch
+# Double-click to run, or from command line:
+INSTALL.bat          # Full menu with all options
+QUICK_INSTALL.bat    # Instant Enhanced Trinity install
+```
+
+**Linux/macOS:**
+```bash
+./install.sh        # Full menu with validation
+./install.sh --quick # Quick Enhanced Trinity validation
+```
+
+### 🎯 **What the One-Click Installer Does:**
+- ✅ **Runs 20 automated protocol tests** (100% pass required)
+- ✅ **Validates JavaScript syntax** for all plugins
+- ✅ **Checks SignalRGB installation**
+- ✅ **Installs to correct Community folder**
+- ✅ **Provides next-step guidance**
+
+### ⚙️ **Manual PowerShell Installation** (Alternative)
 
 ```powershell
 # Install Basic Plugin
@@ -49,22 +74,12 @@
 .\scripts\install_signalrgb.ps1 -Model LCD
 ```
 
-### 🧪 Testing & Validation
+### 📋 Manual File Copy (Last Resort)
 
-```bash
-# Run comprehensive protocol tests (20 tests, 100% pass rate required)
-node scripts/run_tests.js
-
-# Validate plugin syntax  
-node -c signalrgb-plugin/*/device.js
-```
-
-### 📋 Manual Installation
-
-1. **Navigate to**: `%APPDATA%\WhirlwindFX\SignalRgb\Devices\Community\`
-2. **Copy folder**: `signalrgb-plugin/LianLi_GalahadII_Trinity/` (or Enhanced version)
-3. **Restart SignalRGB**
-4. **Follow testing guide**: `scripts/test_plugin.md`
+1. **Run tests first**: `node scripts/run_tests.js` 
+2. **Navigate to**: `%APPDATA%\WhirlwindFX\SignalRgb\Devices\Community\`
+3. **Copy folder**: `signalrgb-plugin/LianLi_GalahadII_Trinity/` (or Enhanced version)
+4. **Restart SignalRGB**
 
 ## Features
 
