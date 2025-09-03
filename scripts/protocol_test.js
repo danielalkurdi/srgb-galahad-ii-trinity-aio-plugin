@@ -187,4 +187,114 @@ class ProtocolValidator {
     
     // Test brightness control
     async testBrightness() {
-        const brightnessLevels = [25, 50, 75, 100];\n        \n        for (const level of brightnessLevels) {\n            const success = await this.testCommand(`Brightness ${level}%`, 0x08, [level]);\n            this.testResults.push({ test: `Brightness: ${level}%`, success });\n            \n            if (success) {\n                // Set white color to see brightness effect\n                await this.testCommand(\"White for brightness\", 0x06, [0x00, 255, 255, 255]);\n                await this.delay(1500);\n            }\n        }\n    }\n    \n    // Test error handling\n    async testErrorHandling() {\n        const errorTests = [\n            { name: \"Invalid Command\", command: 0xAA, data: [0x01], expectError: true },\n            { name: \"Invalid Zone\", command: 0x06, data: [0xFF, 255, 0, 0], expectError: true },\n            { name: \"Oversized Data\", command: 0x06, data: new Array(60).fill(0xFF), expectError: true }\n        ];\n        \n        for (const test of errorTests) {\n            const success = await this.testCommand(test.name, test.command, test.data, test.expectError);\n            this.testResults.push({ test: `Error: ${test.name}`, success });\n        }\n    }\n    \n    // Test individual command\n    async testCommand(name, command, data, expectError = false) {\n        console.log(`Testing: ${name}`);\n        \n        try {\n            const packet = this.createTestPacket(command, data);\n            const validation = this.validatePacket(packet, command);\n            \n            if (!validation.valid && !expectError) {\n                console.log(`❌ ${name}: Validation failed -`, validation.errors);\n                return false;\n            }\n            \n            if (typeof device !== 'undefined' && device.write) {\n                device.write(packet, 64);\n                \n                if (expectError) {\n                    console.log(`⚠️ ${name}: Expected error, but no exception thrown`);\n                    return false;\n                } else {\n                    console.log(`✅ ${name}: Success`);\n                    return true;\n                }\n            } else {\n                console.log(`ℹ️ ${name}: Device not available, structure validated`);\n                return true;\n            }\n            \n        } catch (error) {\n            if (expectError) {\n                console.log(`✅ ${name}: Expected error caught -`, error.message);\n                return true;\n            } else {\n                console.log(`❌ ${name}: Unexpected error -`, error);\n                return false;\n            }\n        }\n    }\n    \n    // Print test summary\n    printTestSummary() {\n        console.log(\"\\n📊 Test Results Summary\");\n        console.log(\"========================\");\n        \n        const passed = this.testResults.filter(r => r.success).length;\n        const total = this.testResults.length;\n        const percentage = total > 0 ? Math.round((passed / total) * 100) : 0;\n        \n        console.log(`Total Tests: ${total}`);\n        console.log(`Passed: ${passed}`);\n        console.log(`Failed: ${total - passed}`);\n        console.log(`Success Rate: ${percentage}%`);\n        \n        console.log(\"\\n📋 Individual Results:\");\n        this.testResults.forEach((result, index) => {\n            const status = result.success ? \"✅\" : \"❌\";\n            console.log(`${index + 1}. ${status} ${result.test}`);\n        });\n        \n        console.log(\"\\n🏁 Protocol validation complete!\");\n    }\n    \n    // Utility delay function\n    delay(ms) {\n        return new Promise(resolve => setTimeout(resolve, ms));\n    }\n}\n\n// Export for use in SignalRGB plugin\nif (typeof module !== 'undefined' && module.exports) {\n    module.exports = { ProtocolValidator, TEST_CONFIG };\n}\n\n// Auto-run if in browser/plugin environment\nif (typeof window !== 'undefined' || typeof global !== 'undefined') {\n    // Can be triggered from SignalRGB plugin for testing\n    window.runProtocolTest = function() {\n        const validator = new ProtocolValidator();\n        validator.runFullTest();\n    };\n    \n    console.log(\"Protocol testing utilities loaded. Call runProtocolTest() to start.\");\n}
+        const brightnessLevels = [25, 50, 75, 100];
+        
+        for (const level of brightnessLevels) {
+            const success = await this.testCommand(`Brightness ${level}%`, 0x08, [level]);
+            this.testResults.push({ test: `Brightness: ${level}%`, success });
+            
+            if (success) {
+                // Set white color to see brightness effect
+                await this.testCommand("White for brightness", 0x06, [0x00, 255, 255, 255]);
+                await this.delay(1500);
+            }
+        }
+    }
+    
+    // Test error handling
+    async testErrorHandling() {
+        const errorTests = [
+            { name: "Invalid Command", command: 0xAA, data: [0x01], expectError: true },
+            { name: "Invalid Zone", command: 0x06, data: [0xFF, 255, 0, 0], expectError: true },
+            { name: "Oversized Data", command: 0x06, data: new Array(60).fill(0xFF), expectError: true }
+        ];
+        
+        for (const test of errorTests) {
+            const success = await this.testCommand(test.name, test.command, test.data, test.expectError);
+            this.testResults.push({ test: `Error: ${test.name}`, success });
+        }
+    }
+    
+    // Test individual command
+    async testCommand(name, command, data, expectError = false) {
+        console.log(`Testing: ${name}`);
+        
+        try {
+            const packet = this.createTestPacket(command, data);
+            const validation = this.validatePacket(packet, command);
+            
+            if (!validation.valid && !expectError) {
+                console.log(`❌ ${name}: Validation failed -`, validation.errors);
+                return false;
+            }
+            
+            if (typeof device !== 'undefined' && device.write) {
+                device.write(packet, 64);
+                
+                if (expectError) {
+                    console.log(`⚠️ ${name}: Expected error, but no exception thrown`);
+                    return false;
+                } else {
+                    console.log(`✅ ${name}: Success`);
+                    return true;
+                }
+            } else {
+                console.log(`ℹ️ ${name}: Device not available, structure validated`);
+                return true;
+            }
+            
+        } catch (error) {
+            if (expectError) {
+                console.log(`✅ ${name}: Expected error caught -`, error.message);
+                return true;
+            } else {
+                console.log(`❌ ${name}: Unexpected error -`, error);
+                return false;
+            }
+        }
+    }
+    
+    // Print test summary
+    printTestSummary() {
+        console.log("\n📊 Test Results Summary");
+        console.log("========================");
+        
+        const passed = this.testResults.filter(r => r.success).length;
+        const total = this.testResults.length;
+        const percentage = total > 0 ? Math.round((passed / total) * 100) : 0;
+        
+        console.log(`Total Tests: ${total}`);
+        console.log(`Passed: ${passed}`);
+        console.log(`Failed: ${total - passed}`);
+        console.log(`Success Rate: ${percentage}%`);
+        
+        console.log("\n📋 Individual Results:");
+        this.testResults.forEach((result, index) => {
+            const status = result.success ? "✅" : "❌";
+            console.log(`${index + 1}. ${status} ${result.test}`);
+        });
+        
+        console.log("\n🏁 Protocol validation complete!");
+    }
+    
+    // Utility delay function
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
+
+// Export for use in SignalRGB plugin
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { ProtocolValidator, TEST_CONFIG };
+}
+
+// Auto-run if in browser/plugin environment
+if (typeof window !== 'undefined') {
+    // Can be triggered from SignalRGB plugin for testing
+    window.runProtocolTest = function() {
+        const validator = new ProtocolValidator();
+        validator.runFullTest();
+    };
+    
+    console.log("Protocol testing utilities loaded. Call runProtocolTest() to start.");
+}

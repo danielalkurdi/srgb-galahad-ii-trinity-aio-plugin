@@ -1,54 +1,87 @@
-# Phase 4: SignalRGB Plugin Testing Guide
+# SignalRGB Plugin Testing Guide
 
-This guide covers installing, testing, and debugging the Lian Li Galahad II plugin.
+This guide covers installing, testing, and debugging the Lian Li Galahad II plugin with automated protocol validation.
 
 ## Prerequisites
 
-- [ ] Completed Phase 1: Device enumeration (know your VID/PID)
-- [ ] Completed Phase 2: USB capture analysis (have protocol details)  
 - [ ] SignalRGB installed and running
 - [ ] L-Connect closed (to avoid device conflicts)
+- [ ] Node.js installed (for automated testing)
+- [ ] Know your pump model: Trinity (0x7373), Performance (0x7371), or LCD (0x7395)
 
-## Installation Steps
+## Quick Installation (Recommended)
 
-### 1. Create Plugin Directory
+### Automated Installation
+Use the provided PowerShell installer for seamless setup:
 
-Create the Community plugin folder:
-```
-%APPDATA%\WhirlwindFX\SignalRgb\Devices\Community\LianLi_GAII_Pump\
-```
-
-**PowerShell command:**
 ```powershell
-$pluginPath = "$env:APPDATA\WhirlwindFX\SignalRgb\Devices\Community\LianLi_GAII_Pump"
-New-Item -ItemType Directory -Path $pluginPath -Force
+# Install Basic Plugin for Trinity
+.\scripts\install_signalrgb.ps1 -Model Trinity
+
+# Install Enhanced Plugin for Trinity with advanced features
+.\scripts\install_signalrgb.ps1 -Model Trinity -Enhanced
+
+# Install for other models
+.\scripts\install_signalrgb.ps1 -Model Performance
+.\scripts\install_signalrgb.ps1 -Model LCD
 ```
 
-### 2. Install Plugin File
+### Manual Installation (Alternative)
 
-Copy `device.js` to the plugin directory:
+1. **Navigate to SignalRGB Community folder**:
+   ```
+   %APPDATA%\WhirlwindFX\SignalRgb\Devices\Community\
+   ```
+
+2. **Copy plugin folder**:
+   - For basic features: Copy `signalrgb-plugin/LianLi_GalahadII_Trinity/`
+   - For enhanced features: Copy `signalrgb-plugin/LianLi_GalahadII_Trinity_Enhanced/`
+
+3. **Restart SignalRGB**
+
+## Automated Testing
+
+### Protocol Validation Suite
+Before installing to SignalRGB, validate the plugin protocol:
+
+```bash
+# Run comprehensive protocol tests
+node scripts/run_tests.js
 ```
-%APPDATA%\WhirlwindFX\SignalRgb\Devices\Community\LianLi_GAII_Pump\device.js
+
+**Expected Output**: 20/20 tests passed (100% success rate)
+- ✅ Initialization Commands (3 tests)
+- ✅ Color Commands (6 tests)  
+- ✅ Ring Control Commands (4 tests)
+- ✅ Brightness Commands (4 tests)
+- ✅ Error Handling (3 tests)
+
+### Syntax Validation
+Verify all plugin files have valid JavaScript syntax:
+
+```bash
+# Validate plugin syntax
+node -c plugin/device.js
+node -c plugin/device_enhanced.js
+node -c signalrgb-plugin/*/device.js
 ```
 
-### 3. Configure for Your Model
+## SignalRGB Integration Testing
 
-Edit `device.js` and update the `ProductId()` function for your pump:
+### Step 1: Pre-Installation Validation
 
-```javascript
-// For Trinity (default)
-export function ProductId() { return 0x7373; }
+1. **Run automated tests first**:
+   ```bash
+   node scripts/run_tests.js
+   ```
+   Ensure all 20 tests pass before proceeding.
 
-// For Trinity Performance  
-export function ProductId() { return 0x7371; }
+2. **Install plugin using automation**:
+   ```powershell
+   .\scripts\install_signalrgb.ps1 -Model [Trinity/Performance/LCD]
+   ```
 
-// For LCD model
-export function ProductId() { return 0x7395; }
-```
-
-## Testing Procedure
-
-### Step 1: Basic Detection Test
+### Step 2: Basic Detection Test
 
 1. **Close L-Connect completely** (check Task Manager)
 2. **Restart SignalRGB** (or use "Scan for devices")
@@ -58,8 +91,9 @@ export function ProductId() { return 0x7395; }
 - ✅ Device appears in SignalRGB device list
 - ✅ No error messages in SignalRGB logs
 - ✅ Device shows as "Connected"
+- ✅ Plugin metadata displays correctly (version 1.0.0)
 
-### Step 2: Static Color Test
+### Step 3: Static Color Test
 
 1. **Apply a Solid effect** (Red, Green, Blue)
 2. **Observe the pump RGB**
@@ -70,7 +104,7 @@ export function ProductId() { return 0x7395; }
 - ✅ Brightness control works
 - ✅ Color changes are immediate (no delay)
 
-### Step 3: Dynamic Effect Test
+### Step 4: Dynamic Effect Test
 
 1. **Apply Rainbow effect** or similar animated effect
 2. **Verify 30 FPS smooth animation**
@@ -80,6 +114,15 @@ export function ProductId() { return 0x7395; }
 - ✅ Smooth color transitions
 - ✅ No flickering or stuttering
 - ✅ Effect speed controls work
+
+### Step 5: Enhanced Features Test (Enhanced Plugin Only)
+
+If using the Enhanced plugin, test advanced features:
+
+1. **Ring Control**: Configure different colors for inner/outer rings
+2. **Per-LED Control**: Test individual LED addressing
+3. **Protocol Auto-Detection**: Verify automatic optimization
+4. **Advanced Error Recovery**: Test plugin stability under various conditions
 
 ## Troubleshooting
 
@@ -146,19 +189,31 @@ logman stop usb -ets
 
 ### Protocol Verification
 
-Create a test script to manually send packets:
+Use the automated protocol testing suite:
+```bash
+# Run comprehensive protocol validation
+node scripts/run_tests.js
+
+# Check specific protocol commands
+node scripts/protocol_test.js  # (with browser environment fixes)
+```
+
+**Advanced Manual Testing** (if needed):
 ```javascript
 // Add to device.js for testing
 function debugSendTestPacket(r, g, b) {
     const packet = new Array(64).fill(0);
-    // Set your protocol bytes here
     packet[0] = 0x00; // Report ID
-    packet[4] = r;    // Red
-    packet[5] = g;    // Green  
-    packet[6] = b;    // Blue
+    packet[1] = 0x16; // Header 1
+    packet[2] = 0x16; // Header 2  
+    packet[3] = 0x06; // RGB Command
+    packet[4] = 0x04; // Data Length
+    packet[5] = 0x00; // Zone (All)
+    packet[6] = r;    // Red
+    packet[7] = g;    // Green  
+    packet[8] = b;    // Blue
     device.write(packet, 64);
 }
-```
 
 ## Performance Validation
 
@@ -200,8 +255,14 @@ const DEVICE_CONFIGS = {
 
 ## Success Criteria
 
-Plugin is working correctly when:
+Plugin is working correctly when all automated and manual tests pass:
 
+### ✅ Automated Testing (Must Pass)
+- [x] **Protocol Validation**: 20/20 tests pass (100% success rate)
+- [x] **Syntax Validation**: All plugin files have valid JavaScript
+- [x] **Installation Automation**: PowerShell installer works correctly
+
+### ✅ Manual Testing (SignalRGB Environment) 
 - [x] **Device Detection**: Shows up in SignalRGB device list
 - [x] **Color Control**: All colors display correctly  
 - [x] **Brightness Control**: Brightness slider works
@@ -210,11 +271,28 @@ Plugin is working correctly when:
 - [x] **Performance**: 30 FPS rendering without stuttering
 - [x] **Compatibility**: Works with existing SignalRGB layouts
 
-## Next Steps
+### ✅ Enhanced Features (Enhanced Plugin Only)
+- [x] **Ring Independence**: Separate inner/outer ring control
+- [x] **Per-LED Control**: Individual LED addressing works
+- [x] **Protocol Auto-Detection**: Automatic optimization functions
+- [x] **Advanced Error Recovery**: Robust error handling
 
-Once basic functionality works:
-- Proceed to Phase 5 for enhancements
-- Add per-LED control if supported
-- Implement ring separation (inner/outer)  
-- Add device-specific effects
-- Create documentation for other users
+## Testing Workflow Summary
+
+```bash
+# 1. Run automated validation
+node scripts/run_tests.js
+
+# 2. Install plugin
+.\scripts\install_signalrgb.ps1 -Model Trinity
+
+# 3. Test in SignalRGB
+# - Device detection
+# - Color control  
+# - Effects testing
+# - Performance validation
+
+# 4. Verify enhanced features (if applicable)
+```
+
+Your plugin is **production-ready** when all criteria above are met! 🎉
