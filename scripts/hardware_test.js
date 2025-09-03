@@ -41,22 +41,38 @@ class HardwareTestRunner extends ProtocolValidator {
 
         try {
             const devices = HID.devices();
-            const lianLiDevices = devices.filter(device => 
-                device.vendorId === 0x0416 && 
-                Object.keys(DEVICE_CONFIGS).includes(device.productId.toString(16).toUpperCase())
-            );
+            const lianLiDevices = devices.filter(device => device.vendorId === 0x0416);
+            
+            console.log('🔍 Raw device scan results:');
+            lianLiDevices.forEach(device => {
+                const pidHex = device.productId.toString(16).toUpperCase().padStart(4, '0');
+                console.log(`   Found: VID_0416&PID_${pidHex} - ${device.product || 'Unknown'}`);
+                console.log(`   Interface: ${device.interface || 'N/A'}, Usage: ${device.usage || 'N/A'}, UsagePage: ${device.usagePage || 'N/A'}`);
+            });
+            
+            const galahadDevices = lianLiDevices.filter(device => {
+                const pid = device.productId;
+                return Object.keys(DEVICE_CONFIGS).map(k => parseInt(k, 16)).includes(pid);
+            });
 
-            if (lianLiDevices.length === 0) {
-                console.log('❌ No Galahad II devices detected');
-                console.log('🔍 Checking for any Lian Li devices (VID 0x0416)...');
-                
-                const anyLianLi = devices.filter(device => device.vendorId === 0x0416);
-                if (anyLianLi.length > 0) {
-                    console.log('ℹ️  Found Lian Li devices with different PIDs:');
-                    anyLianLi.forEach(device => {
-                        console.log(`   PID: 0x${device.productId.toString(16).toUpperCase()} - ${device.product || 'Unknown'}`);
+            if (galahadDevices.length === 0) {
+                console.log('❌ No recognized Galahad II devices detected');
+                if (lianLiDevices.length > 0) {
+                    console.log('ℹ️  Found Lian Li devices with different PIDs or interfaces:');
+                    lianLiDevices.forEach(device => {
+                        const pidHex = device.productId.toString(16).toUpperCase().padStart(4, '0');
+                        console.log(`   PID: 0x${pidHex} - ${device.product || 'Unknown'}`);
+                        console.log(`   Path: ${device.path || 'N/A'}`);
+                        console.log(`   Interface: ${device.interface}, UsagePage: 0x${(device.usagePage || 0).toString(16)}`);
                     });
-                    console.log('💡 You may need to update the plugin PID configuration\n');
+                    console.log('💡 Trying to connect to available interfaces...\n');
+                    
+                    // Try to connect to the first available device anyway
+                    if (lianLiDevices.length > 0) {
+                        this.deviceInfo = lianLiDevices[0];
+                        console.log('🔧 Attempting connection to first available interface...');
+                        return true;
+                    }
                 } else {
                     console.log('❌ No Lian Li devices found at all');
                     console.log('🔧 Troubleshooting steps:');
@@ -68,22 +84,22 @@ class HardwareTestRunner extends ProtocolValidator {
                 return false;
             }
 
-            // Found device(s)
+            // Found device(s) - use galahadDevices for classification
             console.log('✅ Found Galahad II device(s):');
-            lianLiDevices.forEach((device, index) => {
-                const pidHex = device.productId.toString(16).toUpperCase();
-                const config = DEVICE_CONFIGS[parseInt(pidHex, 16)];
+            galahadDevices.forEach((device, index) => {
+                const pidHex = device.productId.toString(16).toUpperCase().padStart(4, '0');
+                const config = DEVICE_CONFIGS[device.productId];  // Use numeric PID directly
                 console.log(`   ${index + 1}. ${config?.name || 'Unknown'} (PID: 0x${pidHex})`);
                 console.log(`      Product: ${device.product || 'Unknown'}`);
                 console.log(`      Interface: ${device.interface || 'Unknown'}`);
                 console.log(`      Path: ${device.path}`);
             });
 
-            // Use the first device found
-            this.deviceInfo = lianLiDevices[0];
-            const pidHex = this.deviceInfo.productId.toString(16).toUpperCase();
+            // Use the first recognized device found
+            this.deviceInfo = galahadDevices[0];
+            const pidHex = this.deviceInfo.productId.toString(16).toUpperCase().padStart(4, '0');
             
-            console.log(`\n🎯 Selected: ${DEVICE_CONFIGS[parseInt(pidHex, 16)]?.name} (0x${pidHex})`);
+            console.log(`\n🎯 Selected: ${DEVICE_CONFIGS[this.deviceInfo.productId]?.name} (0x${pidHex})`);
             
             return true;
             
