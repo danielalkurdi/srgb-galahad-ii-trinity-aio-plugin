@@ -38,7 +38,7 @@
 
 ## Quick Start
 
-### 🚀 **SUPER EASY** - One-Click Install & Test
+### 🚀 One-Click Install & Test
 
 **Windows (Recommended):**
 ```batch
